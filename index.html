@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>課堂提問卡｜大乘起信論</title>
+<style>
+  :root {
+    --bg: #f7f3ea;
+    --card: #fffdf8;
+    --ink: #2f2a23;
+    --muted: #756b5d;
+    --accent: #8a5a2b;
+    --accent2: #b88952;
+    --line: #e2d7c6;
+    --good: #466d4a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", Arial, sans-serif;
+    background: radial-gradient(circle at top, #fff9ed 0%, var(--bg) 54%, #efe5d4 100%);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  .app {
+    width: min(1180px, 94vw);
+    margin: 0 auto;
+    padding: 24px 0 32px;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  h1 { margin: 0; font-size: clamp(24px, 3vw, 40px); letter-spacing: .04em; }
+  .subtitle { color: var(--muted); margin-top: 6px; font-size: 16px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+  button, select {
+    border: 1px solid var(--line);
+    background: #fffaf1;
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 10px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  }
+  button:hover, select:hover { border-color: var(--accent2); }
+  .primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .stage {
+    background: rgba(255,253,248,.86);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    padding: clamp(22px, 4vw, 46px);
+    min-height: 610px;
+    box-shadow: 0 22px 60px rgba(87, 60, 27, .14);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 22px;
+  }
+  .meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 18px; }
+  .question-label { color: var(--accent); font-weight: 700; margin-bottom: 14px; font-size: 22px; }
+  .question {
+    font-size: clamp(34px, 5vw, 62px);
+    line-height: 1.34;
+    font-weight: 800;
+    letter-spacing: .02em;
+    margin: 0;
+  }
+  .answer-box {
+    margin-top: 32px;
+    border-top: 2px dashed var(--line);
+    padding-top: 24px;
+  }
+  .answer-label { color: var(--good); font-weight: 700; font-size: 21px; margin-bottom: 12px; }
+  .answer {
+    font-size: clamp(26px, 3.2vw, 42px);
+    line-height: 1.45;
+    font-weight: 700;
+    color: #344a35;
+  }
+  .hidden { display: none; }
+  .controls { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .hint { color: var(--muted); font-size: 14px; }
+  .progress { height: 12px; background: #eadfcd; border-radius: 999px; overflow: hidden; margin-top: 14px; }
+  .bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width .25s ease; }
+  .list { margin-top: 22px; display: none; }
+  .list.show { display: block; }
+  .item { background: #fffdf8; border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; margin-bottom: 12px; }
+  .item-q { font-weight: 800; font-size: 20px; margin-bottom: 8px; }
+  .item-a { color: #3f5c42; line-height: 1.6; }
+  @media print {
+    body { background: white; }
+    header, .controls, .hint, .progress { display: none !important; }
+    .stage { box-shadow: none; min-height: auto; border: none; }
+    .answer-box { display: block !important; }
+    .list { display: block !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>課堂提問卡</h1>
+      <div class="subtitle">點「顯示答案」前，先請學員思考、討論或舉手回答。</div>
+    </div>
+    <div class="toolbar">
+      <select id="jump"></select>
+      <button id="shuffleBtn">隨機排序</button>
+      <button id="listBtn">題目總覽</button>
+      <button onclick="window.print()">列印</button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div>
+      <div class="meta">
+        <span id="counter"></span>
+        <span>空白鍵：顯示答案｜← →：切換題目</span>
+      </div>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+    </div>
+
+    <section>
+      <div class="question-label">提問</div>
+      <p class="question" id="question"></p>
+      <div class="answer-box hidden" id="answerBox">
+        <div class="answer-label">參考答案</div>
+        <div class="answer" id="answer"></div>
+      </div>
+    </section>
+
+    <div class="controls">
+      <button id="prevBtn">上一題</button>
+      <button class="primary" id="showBtn">顯示答案</button>
+      <button id="nextBtn">下一題</button>
+      <div class="hint">建議用法：先投影題目 → 讓學員 30 秒思考 → 小組分享 → 顯示參考答案。</div>
+    </div>
+  </main>
+
+  <section class="list" id="list"></section>
+</div>
+<script>
+const originalCards = [{"q": "《大乘起信論》中「不覺」的根本定義為何？", "a": "不如實知真如法一。"}, {"q": "真如被稱為「一法界大總相法門體」，其本來面目具足哪些特性？", "a": "平等不二、寂然不動、無能所對立。"}, {"q": "何謂「如實知」真如？", "a": "依真如平等不二、不生不滅、無能所對立的本來面目而知。"}, {"q": "「不如實知」是指完全無知嗎？請說明其含義。", "a": "並非完全不知，而是「知錯了」，將平等無二的真如看成有差別對待。"}, {"q": "不覺的「開始」具體是指什麼狀態？", "a": "一念動念，使本來無相的真如生起分別相，即「不稱實理而知」。"}, {"q": "根本無明（根本不覺）的主要作用為何？", "a": "障蔽中道實相之理，由無始之際一念不覺而生一切煩惱。"}, {"q": "何謂「枝末無明」？", "a": "依根本無明而生起的三細六麤等煩惱現象。"}, {"q": "在修行次第上，應先破除哪一種無明？", "a": "先破枝末無明，再破根本無明。"}, {"q": "「無明」與「真如」在性質上有何根本區別？", "a": "無明以「差別」為性，真如以「平等」為性。"}, {"q": "「不覺心起而有其念，念無自相，不離本覺」說明了什麼道理？", "a": "不覺的妄念並無固定實體，且未離開本具的覺性而存在。"}, {"q": "論中以「迷人依方故迷」比喻什麼？", "a": "眾生依於覺性才有不覺，若離開覺性，則無不覺可言。"}, {"q": "為什麼說「不覺非從外來」？", "a": "因為不覺是依覺性而起的妄用、顛倒用，其體即是真如覺性。"}, {"q": "憨山大師如何解釋「生相無明」的產生？", "a": "由不如實知真如法一，忽然心起而有其念，此一念即是生相無明。"}, {"q": "「依迷顯覺」的主要宗旨是什麼？", "a": "藉由不覺的妄想心才能分別認知，進而顯現並安立「真覺」之名。"}, {"q": "為什麼說「若離不覺之心，則無真覺自相可說」？", "a": "因為真與妄相依（如水與波），離妄則無名目可顯，覺與不覺同體。"}, {"q": "法藏大師所謂「妄有起淨之功」代表什麼含義？", "a": "凡夫雖在迷中，正因有此妄想，方能引發起用、修行而返還清淨。"}, {"q": "何謂「真有待妄之義」？", "a": "真如本離言絕相，必須對待虛妄的顯現才能建立「真」的名相。"}, {"q": "憨山大師認為眾生如何能「證法身」？", "a": "透過一念迴光，了知不覺即是覺的起點，若能知無念，便證法身。"}, {"q": "圓瑛法師如何總結「迷悟」與「聖凡」的關係？", "a": "迷悟只一途，聖凡無二路（真妄相依，體性不二）。"}, {"q": "「依覺成迷」對應生滅門中的哪種動向？", "a": "隨流（開展三細六麤）。"}, {"q": "「依迷顯覺」對應生滅門中的哪種動向？", "a": "返流（始覺起用，至究竟覺）。"}, {"q": "「三細」相產生的前提依據為何？", "a": "依於不覺（根本無明）。"}, {"q": "三細相在時間上是否有先後順序？", "a": "三相實為一剎那心，同時俱起，無前後次第。"}, {"q": "「三細」的名目分別為何？", "a": "無明業相、能見相、境界相。"}, {"q": "無明業相中，「業」的第一層含義「動作義」指什麼？", "a": "最初一念不覺動彼淨心，此動心即名為業。"}, {"q": "無明業相中，「業」的第二層含義「為因義」指什麼？", "a": "動則有苦，此業識為生死之因。"}, {"q": "無明業相的心理特徵為何？", "a": "動念極微細，且緣起一相，能所不分。"}, {"q": "無明業相對應於阿黎耶識的哪一部分？", "a": "自體分。"}, {"q": "「不思議業相」與「無明業相」本質上有何不同？", "a": "不思議業相屬本覺的作用（覺而用），無明業相屬迷妄的妄動（迷而動）。"}, {"q": "六麤中的「起業相」與三細中的「無明業相」有何區別？", "a": "起業相是依執著造作身口意業，無明業相是微細的妄動之始。"}, {"q": "何謂「能見相」？", "a": "依於心動而轉成的妄見，又稱為「轉相」。"}, {"q": "能見相產生的邏輯關係為何？", "a": "以依動故能見，不動則無見。"}, {"q": "能見相（轉相）將心念從一相轉為何種狀態？", "a": "從整體妄動轉為「能見」的主體，產生二元對立的雛形。"}, {"q": "何謂「境界相」？", "a": "依於能見而妄現的所見境界，又稱為「現相」。"}, {"q": "「境界妄現」包含了哪些現象？", "a": "虛空、地水火風四大等一切客觀環境現象。"}, {"q": "論中如何描述「能見相」與「境界相」的依附關係？", "a": "以依能見故，境界妄現；離見則無境界。"}, {"q": "境界相以何為喻來說明其非本有？", "a": "如眼翳見空中華，翳除則華亡。"}, {"q": "三細相與「相續心」的關係為何？", "a": "相續心依此三細而立，若無明滅，則三細滅，相續心隨之止息。"}, {"q": "《起信論》的三細順序（動→轉→現）重點在於說明什麼？", "a": "單約心法生起的相狀，重在「心」。"}, {"q": "《楞嚴經》的三細順序（現→轉）重點在於說明什麼？", "a": "約山河大地生起的相狀，重在「境」。"}, {"q": "三細背誦口訣「一念不覺動轉現」中，「轉」代表哪一相？", "a": "能見相。"}, {"q": "三細背誦口訣「一念不覺動轉現」中，「現」代表哪一相？", "a": "境界相。"}, {"q": "在不覺義中，為什麼說「動則有苦」？", "a": "因為離念不動即是涅槃妙樂，一念妄動即是生死苦患的根源。"}, {"q": "「妄想分別重正是修行的起點」是基於哪一個理路？", "a": "依迷顯覺（不覺才可以覺）。"}, {"q": "修行上所謂「擒賊先擒王」應用在對治境界相時應如何做？", "a": "照破能現境界的妄心，境界便不能轉動自我。"}];
+let cards = [...originalCards];
+let index = 0;
+let answerVisible = false;
+const qEl = document.getElementById('question');
+const aEl = document.getElementById('answer');
+const boxEl = document.getElementById('answerBox');
+const counterEl = document.getElementById('counter');
+const barEl = document.getElementById('bar');
+const jumpEl = document.getElementById('jump');
+const listEl = document.getElementById('list');
+function escapeHtml(s) { return String(s).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+function populateJump() {
+  jumpEl.innerHTML = cards.map((c,i) => `<option value="${i}">第 ${i+1} 題</option>`).join('');
+}
+function render() {
+  const card = cards[index];
+  qEl.textContent = card.q;
+  aEl.textContent = card.a;
+  counterEl.textContent = `第 ${index + 1} / ${cards.length} 題`;
+  barEl.style.width = `${((index + 1) / cards.length) * 100}%`;
+  jumpEl.value = index;
+  boxEl.classList.toggle('hidden', !answerVisible);
+  document.getElementById('showBtn').textContent = answerVisible ? '隱藏答案' : '顯示答案';
+}
+function next() { index = (index + 1) % cards.length; answerVisible = false; render(); }
+function prev() { index = (index - 1 + cards.length) % cards.length; answerVisible = false; render(); }
+function toggleAnswer() { answerVisible = !answerVisible; render(); }
+function shuffle() {
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  index = 0; answerVisible = false; populateJump(); buildList(); render();
+}
+function buildList() {
+  listEl.innerHTML = `<h2>題目總覽</h2>` + cards.map((c,i) => `
+    <div class="item">
+      <div class="item-q">${i+1}. ${escapeHtml(c.q)}</div>
+      <div class="item-a">${escapeHtml(c.a)}</div>
+    </div>`).join('');
+}
+document.getElementById('nextBtn').onclick = next;
+document.getElementById('prevBtn').onclick = prev;
+document.getElementById('showBtn').onclick = toggleAnswer;
+document.getElementById('shuffleBtn').onclick = shuffle;
+document.getElementById('listBtn').onclick = () => listEl.classList.toggle('show');
+jumpEl.onchange = e => { index = Number(e.target.value); answerVisible = false; render(); };
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') next();
+  if (e.key === 'ArrowLeft') prev();
+  if (e.code === 'Space') { e.preventDefault(); toggleAnswer(); }
+});
+populateJump(); buildList(); render();
+</script>
+</body>
+</html>
